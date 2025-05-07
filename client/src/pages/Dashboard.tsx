@@ -4,16 +4,21 @@ import { useQuery } from "@tanstack/react-query";
 import GarageMap from "@/components/dashboard/GarageMap";
 import DashboardSummary from "@/components/dashboard/DashboardSummary";
 import BookingsTable from "@/components/bookings/BookingsTable";
+import HeroMetrics from "@/components/dashboard/HeroMetrics";
+import EarningsChart from "@/components/dashboard/EarningsChart";
+import GarageStatusToggle from "@/components/dashboard/GarageStatusToggle";
 import { Button } from "@/components/ui/button";
-import { CalendarPlus, Filter } from "lucide-react";
+import { CalendarPlus, Filter, ArrowRight } from "lucide-react";
 import { 
   Card, 
   CardContent, 
   CardHeader, 
   CardTitle,
-  CardDescription 
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   // Use garage ID 1 for demo purposes - in a real app, this would come from the user's context
@@ -26,7 +31,7 @@ export default function Dashboard() {
   useEffect(() => {
     sendMessage({
       type: 'subscribe',
-      channels: ['booking-updates', 'garage-updates']
+      channels: ['booking-updates', 'garage-updates', 'service-updates']
     });
   }, [sendMessage]);
 
@@ -43,12 +48,35 @@ export default function Dashboard() {
       </Helmet>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Garage Status Toggle */}
+        <GarageStatusToggle garageId={garageId} />
+        
+        {/* Hero Metrics */}
+        <HeroMetrics garageId={garageId} />
+        
+        {/* Earnings Chart */}
+        <EarningsChart garageId={garageId} />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Garage Map Component */}
-          <GarageMap garageId={garageId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Garage Location</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 aspect-video">
+              <GarageMap garageId={garageId} />
+            </CardContent>
+          </Card>
           
           {/* Dashboard Summary Component */}
-          <DashboardSummary garageId={garageId} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Daily Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DashboardSummary garageId={garageId} />
+            </CardContent>
+          </Card>
         </div>
         
         {/* Bookings Section */}
@@ -58,7 +86,7 @@ export default function Dashboard() {
               <div>
                 <CardTitle>Today's Bookings</CardTitle>
                 <CardDescription>
-                  Manage your bookings for today
+                  Manage your bookings and service appointments for today
                 </CardDescription>
               </div>
               <div className="flex space-x-2">
@@ -79,6 +107,14 @@ export default function Dashboard() {
               statusFilter={["New", "Confirmed", "InProgress"]}
             />
           </CardContent>
+          <CardFooter className="py-3 px-6 border-t flex justify-end">
+            <Link href="/bookings">
+              <Button variant="outline" className="gap-1">
+                View All Bookings
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardFooter>
         </Card>
       </div>
     </>

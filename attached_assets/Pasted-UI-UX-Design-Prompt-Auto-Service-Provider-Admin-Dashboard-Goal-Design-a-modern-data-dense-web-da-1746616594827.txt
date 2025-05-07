@@ -1,0 +1,109 @@
+UI/UX Design Prompt: Auto-Service Provider Admin Dashboard
+
+Goal:
+Design a modern, data-dense web dashboard for RilyGo G & AE that empowers garage owners to monitor operations, track earnings, and manage bookings efficiently.
+Core Requirements:
+
+    Audience:
+
+        Garage owners/service managers (primary).
+
+        Mechanics/staff (secondary, limited access).
+
+        Key needs: Real-time revenue tracking, booking management, and operational flexibility.
+
+    Design Principles:
+
+        Professional, utilitarian aesthetic (dark/light mode compatible with RilyGo’s brand colors).
+
+        Card-based layout for modular data (like your reference), but optimized for garage workflows.
+
+        Interactive components: Hover tooltips, quick-edit fields, and dynamic filters.
+
+    Dashboard Modules to Include:
+
+        Header/Navigation (left sidebar or top bar):
+
+            Logo + quick-access menu (Dashboard, Earnings, Bookings, Garage Schedule, Maintenance, Profile).
+
+            Status toggle: "Open for Business" (green)/"Closed" (red) with edit button (sets operating hours).
+
+        Hero Metrics (Top Row):
+
+            Total Revenue (e.g., *$78,423 | +15.2% vs. last month*).
+
+            Active Bookings (e.g., *32 | +5.2%*).
+
+            Cars in Service (e.g., 12 | 3 pending diagnostics).
+
+            Available Mechanics (e.g., *4/6*).
+
+        Earnings Analytics:
+
+            Interactive line chart (like your reference) showing:
+
+                Daily/weekly/monthly revenue.
+
+                Filter by service type (e.g., oil change, repairs).
+
+                Overlay with operating hours (highlight peak revenue times).
+
+        Booking Management:
+
+            Kanban view or table with columns: New, In Progress, Completed.
+
+            Color-coded status tags (match mobile app’s legend).
+
+            Quick actions: "Assign to mechanic," "Mark as paid."
+
+        Garage Schedule:
+
+            Editable calendar showing:
+
+                Operating hours (with edit button to adjust days/times).
+
+                Mechanic shifts (drag-and-drop assignments).
+
+                Booking slots (visual density indicator).
+
+        Booking History:
+
+            Filterable table with columns: Customer, Service, Date, Duration, Revenue, Status.
+
+            Export to CSV/PDF.
+
+        Car Maintenance Logs:
+
+            List of vehicles with last service date, mileage, next due date.
+
+            Alert badges for overdue maintenance.
+
+    UI Inspirations & References:
+
+        Layout: Card grid from your reference, but with garage-specific metrics.
+
+        Data Viz: Use bar charts for service popularity, pie charts for payment methods.
+
+        Interaction: Clickable rows (drill into booking details), bulk actions (e.g., archive old bookings).
+
+    Deliverables (Figma/Adobe XD):
+
+        Desktop screens:
+
+            Dashboard overview (hero metrics + earnings chart).
+
+            Booking management (Kanban/table view).
+
+            Garage schedule (calendar with edit mode).
+
+            Booking history (filterable table).
+
+        Mobile-responsive wireframes (critical actions only).
+
+        Design system: Buttons, form fields, alert styles.
+
+    Tech Considerations:
+
+        Real-time updates: WebSocket notifications for new bookings.
+
+        API integrations: Calendar (Google Calendar API), payments (Stripe/PayPal).
