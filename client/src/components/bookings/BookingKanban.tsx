@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,13 +6,17 @@ import {
   CalendarClock, 
   User, 
   Car, 
-  CreditCard,
-  ArrowRight
+  Wrench,
+  ArrowRight,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Booking, Driver } from "@shared/schema";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { useWebSocket } from "@/hooks/use-websocket";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { getInitials } from "@/lib/utils";
 
 interface BookingKanbanProps {
   garageId: number;
@@ -20,14 +24,18 @@ interface BookingKanbanProps {
 
 // Status column definitions
 const statusColumns = [
-  { id: "New", name: "New" },
-  { id: "Confirmed", name: "Confirmed" },
-  { id: "InProgress", name: "In Progress" },
-  { id: "Completed", name: "Completed" },
+  { id: "New", name: "Unassigned Jobs", color: "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800" },
+  { id: "Confirmed", name: "Assigned Jobs", color: "bg-amber-50 border-amber-200 dark:bg-amber-950 dark:border-amber-800" },
+  { id: "Completed", name: "Finished Jobs", color: "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" },
 ];
 
 export default function BookingKanban({ garageId }: BookingKanbanProps) {
   const queryClient = useQueryClient();
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
+  
+  // Filter options
+  const [filterBy, setFilterBy] = useState("today");
   
   // Load bookings and drivers
   const { data: bookings, isLoading, refetch } = useQuery<Booking[]>({
@@ -54,15 +62,61 @@ export default function BookingKanban({ garageId }: BookingKanbanProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/bookings?garageId=${garageId}`] });
+      setSelectedBooking(null);
     },
   });
 
   // Group bookings by status
   const bookingsByStatus = statusColumns.reduce((acc, column) => {
-    acc[column.id] = bookings?.filter(booking => 
-      booking.status === column.id && 
-      !['Cancelled', 'NoShow'].includes(booking.status)
-    ) || [];
+    let filteredBookings = bookings?.filter(booking => {
+      // First filter by status
+      if (column.id === "New") {
+        return booking.status === "New" && !['Cancelled', 'NoShow'].includes(booking.status);
+      } else if (column.id === "Confirmed") {
+        return (booking.status === "Confirmed" || booking.status === "InProgress") && 
+               !['Cancelled', 'NoShow'].includes(booking.status);
+      } else if (column.id === "Completed") {
+        return booking.status === "Completed" && !['Cancelled', 'NoShow'].includes(booking.status);
+      }
+      return false;
+    }) || [];
+    
+    // Then filter by date if required
+    if (filterBy === "today") {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      filteredBookings = filteredBookings.filter(booking => {
+        const bookingDate = new Date(booking.date);
+        bookingDate.setHours(0, 0, 0, 0);
+        return bookingDate.getTime() === today.getTime();
+      });
+    } else if (filterBy === "thisWeek") {
+      const today = new Date();
+      const firstDayOfWeek = new Date(today);
+      firstDayOfWeek.setDate(today.getDate() - today.getDay());
+      firstDayOfWeek.setHours(0, 0, 0, 0);
+      
+      const lastDayOfWeek = new Date(firstDayOfWeek);
+      lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+      lastDayOfWeek.setHours(23, 59, 59, 999);
+      
+      filteredBookings = filteredBookings.filter(booking => {
+        const bookingDate = new Date(booking.date);
+        return bookingDate >= firstDayOfWeek && bookingDate <= lastDayOfWeek;
+      });
+    } else if (filterBy === "thisMonth") {
+      const today = new Date();
+      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      lastDayOfMonth.setHours(23, 59, 59, 999);
+      
+      filteredBookings = filteredBookings.filter(booking => {
+        const bookingDate = new Date(booking.date);
+        return bookingDate >= firstDayOfMonth && bookingDate <= lastDayOfMonth;
+      });
+    }
+    
+    acc[column.id] = filteredBookings;
     return acc;
   }, {} as Record<string, Booking[]>);
 
@@ -73,93 +127,253 @@ export default function BookingKanban({ garageId }: BookingKanbanProps) {
 
   // Move a booking to the next status
   const moveToNextStatus = (booking: Booking) => {
-    const currentStatusIndex = statusColumns.findIndex(col => col.id === booking.status);
-    if (currentStatusIndex < statusColumns.length - 1) {
-      const nextStatus = statusColumns[currentStatusIndex + 1].id;
+    let nextStatus;
+    if (booking.status === "New") {
+      nextStatus = "Confirmed";
+    } else if (booking.status === "Confirmed") {
+      nextStatus = "InProgress";
+    } else if (booking.status === "InProgress") {
+      nextStatus = "Completed";
+    }
+    
+    if (nextStatus) {
       updateStatusMutation.mutate({ id: booking.id, status: nextStatus });
     }
   };
+  
+  // Open booking details
+  const openBookingDetails = (booking: Booking) => {
+    setSelectedBooking(booking);
+    const driver = getDriverById(booking.driverId);
+    setSelectedDriver(driver || null);
+  };
+
+  // Generate service type display text
+  const getServiceType = (booking: Booking) => {
+    const types = ['Oil Change', 'Brake Repair', 'Tire Rotation', 'Engine Repair',
+                  'Transmission Service', 'Battery Replacement', 'AC Service', 'Wheel Alignment'];
+    // For demo, we'll just pick a consistent service type based on booking ID
+    return types[booking.id % types.length];
+  };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {statusColumns.map((column) => (
-        <div key={column.id} className="flex flex-col">
-          <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-t-md">
-            <h3 className="text-sm font-medium flex items-center justify-between">
-              {column.name}
-              <Badge variant="outline" className="ml-2">
-                {isLoading ? "..." : bookingsByStatus[column.id].length}
-              </Badge>
-            </h3>
-          </div>
-          
-          <div className="bg-gray-50 dark:bg-gray-800/50 flex-1 p-2 rounded-b-md overflow-y-auto max-h-[600px]">
-            {isLoading ? (
-              <Card className="mb-2 animate-pulse bg-gray-200 dark:bg-gray-700 h-32"></Card>
-            ) : bookingsByStatus[column.id].length === 0 ? (
-              <div className="text-center text-gray-500 dark:text-gray-400 py-4 text-sm">
-                No bookings
-              </div>
-            ) : (
-              bookingsByStatus[column.id].map((booking) => {
-                const driver = getDriverById(booking.driverId);
-                
-                return (
-                  <Card key={booking.id} className="mb-2 border-l-4 border-l-primary">
-                    <CardContent className="p-3">
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-sm">{booking.bookingNumber}</h4>
-                        <Badge variant="outline" className="text-xs">
-                          {formatCurrency(booking.totalPrice)}
-                        </Badge>
-                      </div>
-                      
-                      <div className="space-y-1 text-xs">
-                        <div className="flex items-center text-gray-600 dark:text-gray-300">
-                          <CalendarClock className="h-3 w-3 mr-1" />
-                          {formatDate(new Date(booking.date))}
-                        </div>
-                        
-                        <div className="flex items-center text-gray-600 dark:text-gray-300">
-                          <User className="h-3 w-3 mr-1" />
-                          {driver?.name || "Unknown"}
-                        </div>
-                        
-                        <div className="flex items-center text-gray-600 dark:text-gray-300">
-                          <Car className="h-3 w-3 mr-1" />
-                          {driver 
-                            ? `${driver.vehicleMake} ${driver.vehicleModel} (${driver.vehicleYear})`
-                            : "Unknown vehicle"
-                          }
-                        </div>
-                      </div>
-                      
-                      {column.id !== statusColumns[statusColumns.length - 1].id && (
-                        <div className="mt-2 flex justify-end">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs h-7 px-2 text-primary"
-                            onClick={() => moveToNextStatus(booking)}
-                            disabled={updateStatusMutation.isPending}
-                          >
-                            <span>Move to {statusColumns.find(col => 
-                              col.id === statusColumns[
-                                statusColumns.findIndex(c => c.id === booking.status) + 1
-                              ]?.id
-                            )?.name}</span>
-                            <ArrowRight className="ml-1 h-3 w-3" />
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
-          </div>
+    <div className="flex flex-col gap-6">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2">
+          <Button
+            variant={filterBy === "today" ? "default" : "outline"}
+            onClick={() => setFilterBy("today")}
+            size="sm"
+          >
+            Today
+          </Button>
+          <Button
+            variant={filterBy === "thisWeek" ? "default" : "outline"}
+            onClick={() => setFilterBy("thisWeek")}
+            size="sm"
+          >
+            This Week
+          </Button>
+          <Button
+            variant={filterBy === "thisMonth" ? "default" : "outline"}
+            onClick={() => setFilterBy("thisMonth")}
+            size="sm"
+          >
+            This Month
+          </Button>
         </div>
-      ))}
+        
+        <Button variant="outline" size="sm">
+          <Filter className="h-4 w-4 mr-2" />
+          Filter
+        </Button>
+      </div>
+    
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {statusColumns.map((column) => (
+          <div key={column.id} className={`flex flex-col rounded-md border ${column.color}`}>
+            <div className="p-4 border-b">
+              <h3 className="text-md font-medium flex items-center justify-between">
+                {column.name}
+                <Badge variant="outline" className="ml-2">
+                  {isLoading ? "..." : bookingsByStatus[column.id].length}
+                </Badge>
+              </h3>
+            </div>
+            
+            <div className="flex-1 p-3 overflow-y-auto max-h-[70vh]">
+              {isLoading ? (
+                <div className="space-y-3">
+                  <Card className="animate-pulse bg-gray-200 dark:bg-gray-700 h-28"></Card>
+                  <Card className="animate-pulse bg-gray-200 dark:bg-gray-700 h-28"></Card>
+                </div>
+              ) : bookingsByStatus[column.id].length === 0 ? (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-6 text-sm">
+                  No jobs
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {bookingsByStatus[column.id].map((booking) => {
+                    const driver = getDriverById(booking.driverId);
+                    const serviceType = getServiceType(booking);
+                    
+                    return (
+                      <Card 
+                        key={booking.id} 
+                        className="border hover:border-primary cursor-pointer transition-colors"
+                        onClick={() => openBookingDetails(booking)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-sm text-primary">{booking.bookingNumber}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Job Scheduled
+                              </p>
+                            </div>
+                            
+                            {column.id === "Confirmed" && driver && (
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={driver.avatar} />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                  {getInitials(driver.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                          </div>
+                          
+                          <div className="mt-3 space-y-2">
+                            <div className="flex justify-between">
+                              <div className="flex items-center text-sm">
+                                <CalendarClock className="h-4 w-4 mr-2 text-gray-500" />
+                                {formatDate(new Date(booking.date), "h:mm a, d MMM")}
+                              </div>
+                              
+                              <Badge 
+                                variant="outline" 
+                                className="text-xs"
+                              >
+                                {serviceType}
+                              </Badge>
+                            </div>
+                            
+                            <div className="flex items-center text-sm">
+                              <User className="h-4 w-4 mr-2 text-gray-500" />
+                              {driver?.name || "Unassigned"}
+                            </div>
+                            
+                            {driver && (
+                              <div className="flex items-center text-sm">
+                                <Car className="h-4 w-4 mr-2 text-gray-500" />
+                                {driver.vehicleMake} {driver.vehicleModel}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      {/* Booking Details Dialog */}
+      <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex justify-between items-center">
+              <span>Job Details</span>
+              <Badge variant="outline">{selectedBooking?.bookingNumber}</Badge>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedBooking && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Personal Information</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">First Name</p>
+                    <p className="text-sm">{selectedDriver?.name.split(' ')[0] || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Last Name</p>
+                    <p className="text-sm">{selectedDriver?.name.split(' ').slice(1).join(' ') || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Address Information</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Street Address</p>
+                    <p className="text-sm">{selectedDriver?.address || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Building Number</p>
+                    <p className="text-sm">-</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Apartment Number</p>
+                    <p className="text-sm">-</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Zip Code</p>
+                    <p className="text-sm">{selectedDriver?.zip || "N/A"}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">Job Details</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Job Type</p>
+                    <p className="text-sm">{getServiceType(selectedBooking)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Job Title</p>
+                    <p className="text-sm">{selectedBooking.status === "New" ? "Unassigned" : "Service Job"}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Job Notes</p>
+                  <p className="text-sm">
+                    {selectedBooking.notes || "Vehicle needs maintenance service. Customer reported issues with performance."}
+                  </p>
+                </div>
+              </div>
+              
+              <div>
+                <p className="text-xs text-gray-500">Scheduled Time</p>
+                <p className="text-sm">{formatDate(new Date(selectedBooking.date), "PPpp")}</p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="flex justify-between gap-3 sm:justify-between">
+            <Button variant="outline" onClick={() => setSelectedBooking(null)}>
+              Cancel
+            </Button>
+            
+            {selectedBooking && selectedBooking.status !== "Completed" && (
+              <Button 
+                onClick={() => moveToNextStatus(selectedBooking)}
+                disabled={updateStatusMutation.isPending}
+              >
+                {updateStatusMutation.isPending ? "Updating..." : 
+                 selectedBooking.status === "New" ? "Assign Job" :
+                 selectedBooking.status === "Confirmed" ? "Begin Service" :
+                 selectedBooking.status === "InProgress" ? "Mark Complete" : "Move Next"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

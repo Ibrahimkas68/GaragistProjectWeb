@@ -47,6 +47,8 @@ export const drivers = pgTable("drivers", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
+  address: text("address"),
+  zip: text("zip"),
   vehicleMake: text("vehicle_make").notNull(),
   vehicleModel: text("vehicle_model").notNull(),
   vehicleYear: text("vehicle_year").notNull(),
