@@ -234,10 +234,13 @@ export default function BookingKanban({ garageId }: BookingKanbanProps) {
                             
                             {column.id === "Confirmed" && driver && (
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={driver.avatar} />
-                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                  {getInitials(driver.name)}
-                                </AvatarFallback>
+                                {driver.avatar ? (
+                                  <AvatarImage src={driver.avatar} />
+                                ) : (
+                                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                    {getInitials(driver.name)}
+                                  </AvatarFallback>
+                                )}
                               </Avatar>
                             )}
                           </div>
