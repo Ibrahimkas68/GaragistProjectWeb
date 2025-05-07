@@ -1,0 +1,86 @@
+import { useEffect } from "react";
+import { Helmet } from "react-helmet";
+import { useQuery } from "@tanstack/react-query";
+import GarageMap from "@/components/dashboard/GarageMap";
+import DashboardSummary from "@/components/dashboard/DashboardSummary";
+import BookingsTable from "@/components/bookings/BookingsTable";
+import { Button } from "@/components/ui/button";
+import { CalendarPlus, Filter } from "lucide-react";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription 
+} from "@/components/ui/card";
+import { useWebSocket } from "@/hooks/use-websocket";
+
+export default function Dashboard() {
+  // Use garage ID 1 for demo purposes - in a real app, this would come from the user's context
+  const garageId = 1;
+
+  // Set up WebSocket connection for dashboard
+  const { sendMessage } = useWebSocket('dashboard-updates');
+
+  // Subscribe to WebSocket channels on component mount
+  useEffect(() => {
+    sendMessage({
+      type: 'subscribe',
+      channels: ['booking-updates', 'garage-updates']
+    });
+  }, [sendMessage]);
+
+  // Get today's bookings for the dashboard
+  const { data: todaysBookings, refetch: refetchBookings } = useQuery({
+    queryKey: [`/api/bookings/today?garageId=${garageId}`],
+  });
+
+  return (
+    <>
+      <Helmet>
+        <title>Dashboard - RilyGo G&AE</title>
+        <meta name="description" content="RilyGo G&AE dashboard showing garage status, today's summary, and booking management." />
+      </Helmet>
+
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Garage Map Component */}
+          <GarageMap garageId={garageId} />
+          
+          {/* Dashboard Summary Component */}
+          <DashboardSummary garageId={garageId} />
+        </div>
+        
+        {/* Bookings Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+              <div>
+                <CardTitle>Today's Bookings</CardTitle>
+                <CardDescription>
+                  Manage your bookings for today
+                </CardDescription>
+              </div>
+              <div className="flex space-x-2">
+                <Button>
+                  <CalendarPlus className="mr-2 h-4 w-4" />
+                  New Booking
+                </Button>
+                <Button variant="outline">
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filter
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <BookingsTable 
+              garageId={garageId} 
+              statusFilter={["New", "Confirmed", "InProgress"]}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
