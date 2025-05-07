@@ -1,0 +1,93 @@
+Prompt for Modern UI/UX Web App Design
+
+Objective:
+Design a responsive web app for RilyGo G & AE (auto-service provider platform) that mirrors the mobile app’s functionality while leveraging web-centric UX patterns. Prioritize clarity, efficiency, and scalability for garage owners/managers.
+Key Requirements:
+
+    Audience & Role:
+
+        Primary users: Garage owners, service managers, mechanics.
+
+        Secondary: Drivers/staff (sub-accounts).
+
+        Core needs: Booking management, service/product cataloging, real-time status updates, and analytics.
+
+    Design Principles:
+
+        Clean, professional aesthetic with a focus on data density (e.g., tables, dashboards).
+
+        Mobile-first but optimized for larger screens (multi-column layouts, hover states).
+
+        Consistent component library (buttons, modals, form fields) matching the mobile app’s brand.
+
+    Core Modules to Adapt:
+
+        Dashboard:
+
+            Map view (Google Maps API integration) with garage location/status toggle (Open/Busy/Closed).
+
+            Summary cards for today’s bookings, revenue, and pending actions.
+
+        Booking Management:
+
+            Kanban board or table with filters (Status: New/In Progress/Completed).
+
+            Color-coded pills (match mobile’s 6-status legend).
+
+            Bulk actions (e.g., accept/reject multiple bookings).
+
+        Services & Products:
+
+            CRUD interfaces with image upload, category trees, and bulk pricing edits.
+
+        Driver Management:
+
+            Table with sortable columns (name, role, last active).
+
+            Inline editing for quick updates (no modal needed).
+
+        Analytics:
+
+            Interactive charts (bookings over time, revenue by service, customer ratings).
+
+            Export to CSV/PDF.
+
+    Web-Specific Enhancements:
+
+        Keyboard shortcuts (e.g., Ctrl+A to select all bookings).
+
+        Multi-tab support (e.g., open a booking details side-panel without losing context).
+
+        Real-time updates (WebSocket notifications for new bookings).
+
+    UI Inspirations:
+
+        Reference: Shopify Admin (for scalable CRUD workflows), Calendly (for booking views), QuickBooks (for dashboards).
+
+        Visuals:
+
+            Primary color: RilyGo’s brand blue (or derive from mobile app).
+
+            Data visualization: Use Light/Dark-friendly palettes (match mobile’s theme toggle).
+
+    Deliverables:
+
+        Figma/Adobe XD screens covering:
+
+            Logged-in Dashboard (map + metrics).
+
+            Booking Management (table/board view).
+
+            Service/Product Catalog (with bulk edit mode).
+
+            Driver Management (table + add/edit modals).
+
+            Analytics (charts with date-range picker).
+
+        Design system documentation (typography, spacing, interaction states).
+
+    Success Metrics:
+
+        User testing: 90%+ task completion rate for critical flows (e.g., accept a booking, add a service).
+
+        <2s load time for key pages (optimize assets, lazy-load non-critical modules).
