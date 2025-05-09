@@ -90,9 +90,16 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                   <p className="text-sm text-gray-600 dark:text-gray-400">Brake repair for Honda Civic has been completed</p>
                 </div>
               </div>
-              <div className="p-2 border-t text-center">
+              <div className="p-2 border-t text-center flex space-x-2">
                 <Button variant="ghost" className="text-sm text-primary w-full">
-                  View all notifications
+                  View all
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  className="text-sm text-primary w-full"
+                  onClick={() => setNotifications(0)}
+                >
+                  Clear all
                 </Button>
               </div>
             </DropdownMenuContent>

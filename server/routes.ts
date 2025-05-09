@@ -351,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/analytics/today-summary', async (req, res) => {
     try {
-      const garageId = Number(req.query.garageId);
+      const garageId = Number(req.query.garageId || 1);
       if (isNaN(garageId)) {
         return res.status(400).json({ error: 'Invalid garage ID' });
       }
@@ -360,6 +360,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(summary);
     } catch (error) {
       res.status(500).json({ error: 'Failed to get today\'s summary' });
+    }
+  });
+  
+  // Additional analytics endpoints
+  app.get('/api/analytics/hero-metrics', async (req, res) => {
+    try {
+      const garageId = Number(req.query.garageId || 1);
+      
+      // For demo, returning synthetic metrics
+      res.json({
+        totalBookings: 152,
+        monthlyRevenue: 26420,
+        averageRating: 4.7,
+        completionRate: 94
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get hero metrics' });
+    }
+  });
+  
+  app.get('/api/analytics/service-revenue', async (req, res) => {
+    try {
+      const garageId = Number(req.query.garageId || 1);
+      
+      // Demo data for service revenue chart
+      res.json([
+        { name: 'Oil Change', value: 5200 },
+        { name: 'Brake Service', value: 8300 },
+        { name: 'Tire Rotation', value: 3100 },
+        { name: 'Engine Tune-up', value: 6700 },
+        { name: 'Air Conditioning', value: 3120 }
+      ]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get service revenue data' });
+    }
+  });
+  
+  app.get('/api/analytics/earnings', async (req, res) => {
+    try {
+      const garageId = Number(req.query.garageId || 1);
+      
+      // Demo data for monthly earnings chart
+      res.json([
+        { name: 'Jan', value: 18200 },
+        { name: 'Feb', value: 21300 },
+        { name: 'Mar', value: 24100 },
+        { name: 'Apr', value: 22700 },
+        { name: 'May', value: 26420 }
+      ]);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get earnings data' });
     }
   });
 
