@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Product, insertProductSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,11 @@ interface ProductGridProps {
   garageId: number;
 }
 
-export default function ProductGrid({ garageId }: ProductGridProps) {
+export interface ProductGridHandles {
+  handleAddProduct: () => void;
+}
+
+const ProductGrid = forwardRef<ProductGridHandles, ProductGridProps>(({ garageId }, ref) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -192,6 +196,11 @@ export default function ProductGrid({ garageId }: ProductGridProps) {
     setEditingProduct(null);
     setDialogOpen(true);
   };
+  
+  // Expose method to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleAddProduct,
+  }));
 
   // Handle open dialog for editing a product
   const handleEditProduct = (product: Product) => {
@@ -422,4 +431,6 @@ export default function ProductGrid({ garageId }: ProductGridProps) {
       </Dialog>
     </>
   );
-}
+});
+
+export default ProductGrid;

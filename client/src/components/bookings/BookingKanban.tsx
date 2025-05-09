@@ -8,7 +8,8 @@ import {
   Car, 
   Wrench,
   ArrowRight,
-  Filter
+  Filter,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Booking, Driver } from "@shared/schema";
@@ -17,6 +18,8 @@ import { useWebSocket } from "@/hooks/use-websocket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { getInitials } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 interface BookingKanbanProps {
   garageId: number;
@@ -125,6 +128,9 @@ export default function BookingKanban({ garageId }: BookingKanbanProps) {
     return drivers?.find(driver => driver.id === driverId);
   };
 
+  // For toast notifications
+  const { toast } = useToast();
+
   // Move a booking to the next status
   const moveToNextStatus = (booking: Booking) => {
     let nextStatus;
@@ -137,7 +143,48 @@ export default function BookingKanban({ garageId }: BookingKanbanProps) {
     }
     
     if (nextStatus) {
-      updateStatusMutation.mutate({ id: booking.id, status: nextStatus });
+      // Show appropriate toast based on the status change
+      updateStatusMutation.mutate(
+        { id: booking.id, status: nextStatus },
+        {
+          onSuccess: () => {
+            const driver = getDriverById(booking.driverId);
+            const driverName = driver?.name || "Unassigned";
+            
+            if (nextStatus === "Confirmed") {
+              toast({
+                title: "Job Confirmed",
+                description: `Job #${booking.bookingNumber} has been assigned successfully.`,
+                action: (
+                  <ToastAction altText="View" onClick={() => openBookingDetails(booking)}>
+                    View
+                  </ToastAction>
+                ),
+              });
+            } else if (nextStatus === "InProgress") {
+              toast({
+                title: "Service Started",
+                description: `Service for job #${booking.bookingNumber} has begun.`,
+                action: (
+                  <ToastAction altText="View" onClick={() => openBookingDetails(booking)}>
+                    View
+                  </ToastAction>
+                ),
+              });
+            } else if (nextStatus === "Completed") {
+              toast({
+                title: "Job Completed",
+                description: `Job #${booking.bookingNumber} has been marked as complete.`,
+                action: (
+                  <ToastAction altText="View" onClick={() => openBookingDetails(booking)}>
+                    View
+                  </ToastAction>
+                ),
+              });
+            }
+          }
+        }
+      );
     }
   };
   

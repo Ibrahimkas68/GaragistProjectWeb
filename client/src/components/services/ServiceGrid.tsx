@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Service, insertServiceSchema } from "@shared/schema";
 import ServiceCard from "./ServiceCard";
@@ -25,7 +25,12 @@ interface ServiceGridProps {
   garageId: number;
 }
 
-export default function ServiceGrid({ garageId }: ServiceGridProps) {
+// Interface for the forwarded ref
+export interface ServiceGridHandles {
+  handleAddService: () => void;
+}
+
+const ServiceGrid = forwardRef<ServiceGridHandles, ServiceGridProps>(({ garageId }, ref) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -159,6 +164,11 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
     setDialogOpen(true);
   };
 
+  // Expose method to parent via ref
+  useImperativeHandle(ref, () => ({
+    handleAddService,
+  }));
+
   // Handle open dialog for editing a service
   const handleEditService = (service: Service) => {
     form.reset({
@@ -234,7 +244,7 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
                   {...form.register("name")}
                 />
                 {form.formState.errors.name && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.name.message}</p>
+                  <p className="text-red-500 text-sm">{form.formState.errors.name.message as string}</p>
                 )}
               </div>
               
@@ -246,7 +256,7 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
                   {...form.register("description")}
                 />
                 {form.formState.errors.description && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.description.message}</p>
+                  <p className="text-red-500 text-sm">{form.formState.errors.description.message as string}</p>
                 )}
               </div>
               
@@ -260,7 +270,7 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
                     {...form.register("price")}
                   />
                   {form.formState.errors.price && (
-                    <p className="text-red-500 text-sm">{form.formState.errors.price.message}</p>
+                    <p className="text-red-500 text-sm">{form.formState.errors.price.message as string}</p>
                   )}
                 </div>
                 
@@ -273,7 +283,7 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
                     {...form.register("duration")}
                   />
                   {form.formState.errors.duration && (
-                    <p className="text-red-500 text-sm">{form.formState.errors.duration.message}</p>
+                    <p className="text-red-500 text-sm">{form.formState.errors.duration.message as string}</p>
                   )}
                 </div>
               </div>
@@ -286,7 +296,7 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
                   {...form.register("category")}
                 />
                 {form.formState.errors.category && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.category.message}</p>
+                  <p className="text-red-500 text-sm">{form.formState.errors.category.message as string}</p>
                 )}
               </div>
               
@@ -298,7 +308,7 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
                   {...form.register("imageUrl")}
                 />
                 {form.formState.errors.imageUrl && (
-                  <p className="text-red-500 text-sm">{form.formState.errors.imageUrl.message}</p>
+                  <p className="text-red-500 text-sm">{form.formState.errors.imageUrl.message as string}</p>
                 )}
               </div>
             </div>
@@ -322,4 +332,6 @@ export default function ServiceGrid({ garageId }: ServiceGridProps) {
       </Dialog>
     </>
   );
-}
+});
+
+export default ServiceGrid;
