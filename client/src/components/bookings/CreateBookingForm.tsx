@@ -53,6 +53,8 @@ const formSchema = insertBookingSchema.omit({
     name: z.string().optional(),
     price: z.number().optional(),
   })).optional(),
+  serviceToAdd: z.string().optional(),
+  productToAdd: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -101,6 +103,9 @@ export default function CreateBookingForm({ garageId, onSuccess }: CreateBooking
       notes: "",
       servicesSelected: [],
       productsSelected: [],
+      // Add these fields as they'll be used for selections
+      serviceToAdd: "",
+      productToAdd: "",
     },
   });
 
@@ -367,7 +372,13 @@ export default function CreateBookingForm({ garageId, onSuccess }: CreateBooking
       <div>
         <Label>Services</Label>
         <div className="flex items-center space-x-2 mb-2">
-          <Select disabled={isLoading} onValueChange={addService}>
+          <Select 
+            disabled={isLoading} 
+            onValueChange={(value) => {
+              form.setValue("serviceToAdd", value);
+              addService(value);
+            }}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Add a service" />
             </SelectTrigger>
@@ -379,30 +390,20 @@ export default function CreateBookingForm({ garageId, onSuccess }: CreateBooking
               ))}
             </SelectContent>
           </Select>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="icon" 
-            onClick={() => {
-              const serviceId = form.getValues("serviceToAdd");
-              if (serviceId) addService(serviceId);
-            }}
-            disabled={isLoading}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
         
-        {form.getValues("servicesSelected")?.length > 0 ? (
+        {(form.getValues("servicesSelected") || []).length > 0 ? (
           <div className="space-y-2">
-            {form.getValues("servicesSelected").map((service) => {
+            {(form.getValues("servicesSelected") || []).map((service) => {
               const serviceDetails = services?.find(s => s.id === service.id);
+              const serviceName = serviceDetails?.name || "Service";
+              const servicePrice = serviceDetails?.price || 0;
               return (
                 <div key={service.id} className="flex items-center justify-between border p-2 rounded-md">
                   <div className="flex-1">
-                    <div className="font-medium">{serviceDetails?.name}</div>
+                    <div className="font-medium">{serviceName}</div>
                     <div className="text-sm text-muted-foreground">
-                      {formatCurrency(serviceDetails?.price || 0)} × {service.quantity}
+                      {formatCurrency(servicePrice)} × {service.quantity}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -449,7 +450,13 @@ export default function CreateBookingForm({ garageId, onSuccess }: CreateBooking
       <div>
         <Label>Products (Optional)</Label>
         <div className="flex items-center space-x-2 mb-2">
-          <Select disabled={isLoading} onValueChange={addProduct}>
+          <Select 
+            disabled={isLoading} 
+            onValueChange={(value) => {
+              form.setValue("productToAdd", value);
+              addProduct(value);
+            }}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Add a product" />
             </SelectTrigger>
@@ -461,27 +468,20 @@ export default function CreateBookingForm({ garageId, onSuccess }: CreateBooking
               ))}
             </SelectContent>
           </Select>
-          <Button 
-            type="button" 
-            variant="outline" 
-            size="icon" 
-            onClick={() => addProduct(parseInt(form.getValues("productToAdd") || "0"))}
-            disabled={isLoading}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
         
         {form.getValues("productsSelected")?.length > 0 ? (
           <div className="space-y-2">
             {form.getValues("productsSelected").map((product) => {
               const productDetails = products?.find(p => p.id === product.id);
+              const productName = productDetails?.name || "Product";
+              const productPrice = productDetails?.price || 0;
               return (
                 <div key={product.id} className="flex items-center justify-between border p-2 rounded-md">
                   <div className="flex-1">
-                    <div className="font-medium">{productDetails?.name}</div>
+                    <div className="font-medium">{productName}</div>
                     <div className="text-sm text-muted-foreground">
-                      {formatCurrency(productDetails?.price || 0)} × {product.quantity}
+                      {formatCurrency(productPrice)} × {product.quantity}
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">

@@ -192,6 +192,7 @@ export class MemStorage implements IStorage {
         vehicleMake: "Honda",
         vehicleModel: "Civic",
         vehicleYear: "2018",
+        password: "password123",
         lastActive: new Date()
       },
       {
@@ -203,6 +204,7 @@ export class MemStorage implements IStorage {
         vehicleMake: "Toyota",
         vehicleModel: "Corolla",
         vehicleYear: "2020",
+        password: "password123",
         lastActive: new Date()
       },
       {
@@ -214,6 +216,7 @@ export class MemStorage implements IStorage {
         vehicleMake: "Ford",
         vehicleModel: "F-150",
         vehicleYear: "2019",
+        password: "password123",
         lastActive: new Date()
       }
     ];
