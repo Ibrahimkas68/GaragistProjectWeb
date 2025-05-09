@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -39,7 +39,6 @@ export function ThemeProvider({
         .matches
         ? "dark"
         : "light";
-
       root.classList.add(systemTheme);
       return;
     }
