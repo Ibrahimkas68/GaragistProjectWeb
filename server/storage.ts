@@ -272,7 +272,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    // Ensure required fields have default values if missing
+    const user: User = { 
+      ...insertUser, 
+      id,
+      role: insertUser.role || 'user' // Set default role if not provided
+    };
     this.users.set(id, user);
     return user;
   }
@@ -288,7 +293,13 @@ export class MemStorage implements IStorage {
 
   async createGarage(insertGarage: InsertGarage): Promise<Garage> {
     const id = this.currentGarageId++;
-    const garage: Garage = { ...insertGarage, id };
+    // Ensure required fields have default values if missing
+    const garage: Garage = { 
+      ...insertGarage, 
+      id,
+      status: insertGarage.status || 'Closed', // Default status
+      avatar: insertGarage.avatar || null // Default avatar 
+    };
     this.garages.set(id, garage);
     return garage;
   }
