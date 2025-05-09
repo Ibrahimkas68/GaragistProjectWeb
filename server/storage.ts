@@ -330,7 +330,13 @@ export class MemStorage implements IStorage {
 
   async createService(insertService: InsertService): Promise<Service> {
     const id = this.currentServiceId++;
-    const service: Service = { ...insertService, id };
+    // Ensure required fields have default values if missing
+    const service: Service = { 
+      ...insertService, 
+      id,
+      imageUrl: insertService.imageUrl || null, // Default image URL
+      isActive: insertService.isActive ?? true  // Default active status
+    };
     this.services.set(id, service);
     return service;
   }
@@ -361,7 +367,14 @@ export class MemStorage implements IStorage {
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
     const id = this.currentProductId++;
-    const product: Product = { ...insertProduct, id };
+    // Ensure required fields have default values if missing
+    const product: Product = { 
+      ...insertProduct, 
+      id,
+      imageUrl: insertProduct.imageUrl || null, // Default image URL
+      isActive: insertProduct.isActive ?? true,  // Default active status
+      stock: insertProduct.stock ?? 0           // Default stock
+    };
     this.products.set(id, product);
     return product;
   }
@@ -390,7 +403,15 @@ export class MemStorage implements IStorage {
 
   async createDriver(insertDriver: InsertDriver): Promise<Driver> {
     const id = this.currentDriverId++;
-    const driver: Driver = { ...insertDriver, id };
+    // Ensure required fields have default values if missing
+    const driver: Driver = { 
+      ...insertDriver, 
+      id,
+      address: insertDriver.address || null,    // Default address
+      avatar: insertDriver.avatar || null,      // Default avatar
+      zip: insertDriver.zip || null,            // Default zip
+      lastActive: insertDriver.lastActive || new Date() // Default last active date
+    };
     this.drivers.set(id, driver);
     return driver;
   }
@@ -417,18 +438,37 @@ export class MemStorage implements IStorage {
     if (!driver) return undefined;
 
     // Parse the servicesBooked JSON to get service IDs
-    const servicesBooked = JSON.parse(booking.servicesBooked.toString());
-    const services = servicesBooked.map((item: { serviceId: number }) => {
-      return this.services.get(item.serviceId);
-    }).filter(Boolean);
+    let services: Service[] = [];
+    try {
+      const servicesBooked = typeof booking.servicesBooked === 'string' 
+        ? JSON.parse(booking.servicesBooked) 
+        : booking.servicesBooked;
+        
+      if (Array.isArray(servicesBooked)) {
+        services = servicesBooked
+          .map((item: { serviceId: number }) => this.services.get(item.serviceId))
+          .filter(Boolean) as Service[];
+      }
+    } catch (error) {
+      console.error('Error parsing servicesBooked:', error);
+    }
 
     // Parse the productsBooked JSON if it exists
     let products: Product[] = [];
     if (booking.productsBooked) {
-      const productsBooked = JSON.parse(booking.productsBooked.toString());
-      products = productsBooked.map((item: { productId: number }) => {
-        return this.products.get(item.productId);
-      }).filter(Boolean);
+      try {
+        const productsBooked = typeof booking.productsBooked === 'string'
+          ? JSON.parse(booking.productsBooked)
+          : booking.productsBooked;
+          
+        if (Array.isArray(productsBooked)) {
+          products = productsBooked
+            .map((item: { productId: number }) => this.products.get(item.productId))
+            .filter(Boolean) as Product[];
+        }
+      } catch (error) {
+        console.error('Error parsing productsBooked:', error);
+      }
     }
 
     return {
@@ -467,11 +507,24 @@ export class MemStorage implements IStorage {
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
     const id = this.currentBookingId++;
+    
+    // Helper function to generate a random booking number
+    const generateBookingNumber = () => {
+      return Math.random().toString(36).substring(2, 10).toUpperCase();
+    };
+    
+    // Ensure required fields have default values if missing
     const booking: Booking = { 
       ...insertBooking, 
       id,
-      bookingNumber: insertBooking.bookingNumber || `BK-${generateBookingNumber()}`
+      status: insertBooking.status || 'New',
+      bookingNumber: insertBooking.bookingNumber || `BK-${generateBookingNumber()}`,
+      notes: insertBooking.notes || null,
+      productsBooked: insertBooking.productsBooked || [],
+      createdAt: insertBooking.createdAt || new Date(),
+      servicesBooked: insertBooking.servicesBooked as unknown
     };
+    
     this.bookings.set(id, booking);
     return booking;
   }
@@ -523,16 +576,25 @@ export class MemStorage implements IStorage {
     const revenueByService: Record<string, number> = {};
 
     for (const booking of bookings) {
-      const servicesBooked = JSON.parse(booking.servicesBooked.toString());
-      
-      for (const item of servicesBooked) {
-        const service = this.services.get(item.serviceId);
-        if (service) {
-          if (!revenueByService[service.name]) {
-            revenueByService[service.name] = 0;
+      try {
+        // Safely parse servicesBooked from either string or object
+        const servicesBooked = typeof booking.servicesBooked === 'string'
+          ? JSON.parse(booking.servicesBooked)
+          : booking.servicesBooked;
+        
+        if (Array.isArray(servicesBooked)) {
+          for (const item of servicesBooked) {
+            const service = this.services.get(item.serviceId);
+            if (service) {
+              if (!revenueByService[service.name]) {
+                revenueByService[service.name] = 0;
+              }
+              revenueByService[service.name] += service.price * (item.quantity || 1);
+            }
           }
-          revenueByService[service.name] += service.price * item.quantity;
         }
+      } catch (error) {
+        console.error('Error parsing services booked:', error);
       }
     }
 
