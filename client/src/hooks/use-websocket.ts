@@ -43,91 +43,96 @@ export function useWebSocket(
       socketRef.current.close();
     }
     
-    // Create new WebSocket connection
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const socket = new WebSocket(wsUrl);
-    
-    // Update ready state
-    socket.onopen = (event) => {
-      setReadyState(socket.readyState);
-      reconnectCountRef.current = 0;
+    try {
+      // Create new WebSocket connection
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const host = window.location.host || "localhost:5000";
+      const wsUrl = `${protocol}//${host}/ws`;
       
-      // Send subscription message to subscribe to the channel
-      socket.send(
-        JSON.stringify({
-          type: "subscribe",
-          channels: [channelRef.current],
-        })
-      );
+      const socket = new WebSocket(wsUrl);
       
-      if (onOpen) onOpen(event);
-    };
-    
-    // Handle incoming messages
-    socket.onmessage = (event) => {
-      // Create message object with received data and timestamp
-      const message: Message = {
-        data: event.data,
-        timestamp: new Date(),
+      // Update ready state
+      socket.onopen = (event) => {
+        setReadyState(socket.readyState);
+        reconnectCountRef.current = 0;
+        
+        // Send subscription message to subscribe to the channel
+        socket.send(
+          JSON.stringify({
+            type: "subscribe",
+            channels: [channelRef.current],
+          })
+        );
+        
+        if (onOpen) onOpen(event);
       };
       
-      setLastMessage(message);
-      
-      // Parse message and call onMessage callback if provided
-      try {
-        const parsedData = JSON.parse(event.data);
-        if (
-          parsedData.channel === channelRef.current && 
-          onMessage
-        ) {
-          onMessage(parsedData);
+      // Handle incoming messages
+      socket.onmessage = (event) => {
+        // Create message object with received data and timestamp
+        const message: Message = {
+          data: event.data,
+          timestamp: new Date(),
+        };
+        
+        setLastMessage(message);
+        
+        // Parse message and call onMessage callback if provided
+        try {
+          const parsedData = JSON.parse(event.data);
+          if (
+            parsedData.channel === channelRef.current && 
+            onMessage
+          ) {
+            onMessage(parsedData);
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
         }
-      } catch (error) {
-        console.error("Error parsing WebSocket message:", error);
-      }
-    };
-    
-    // Handle connection close
-    socket.onclose = (event) => {
-      setReadyState(socket.readyState);
+      };
       
-      // Attempt to reconnect if not closed manually
-      if (event.code !== 1000) {
-        if (reconnectCountRef.current < reconnectAttempts) {
-          const timeout = setTimeout(() => {
-            reconnectCountRef.current++;
-            connect();
-          }, reconnectInterval);
-          
-          return () => clearTimeout(timeout);
+      // Handle connection close
+      socket.onclose = (event) => {
+        setReadyState(socket.readyState);
+        
+        // Attempt to reconnect if not closed manually
+        if (event.code !== 1000) {
+          if (reconnectCountRef.current < reconnectAttempts) {
+            const timeout = setTimeout(() => {
+              reconnectCountRef.current++;
+              connect();
+            }, reconnectInterval);
+            
+            return () => clearTimeout(timeout);
+          }
         }
-      }
+        
+        if (onClose) onClose(event);
+      };
       
-      if (onClose) onClose(event);
-    };
-    
-    // Handle errors
-    socket.onerror = (event) => {
-      if (onError) onError(event);
-    };
-    
-    socketRef.current = socket;
+      // Handle errors
+      socket.onerror = (event) => {
+        console.error("WebSocket error:", event);
+        if (onError) onError(event);
+      };
+      
+      socketRef.current = socket;
+    } catch (error) {
+      console.error("Error connecting to WebSocket:", error);
+    }
     
     // Clean up on unmount
-    return () => {
-      socket.close();
-    };
-  }, [reconnectInterval, reconnectAttempts, onOpen, onClose, onError, onMessage]);
-
-  // Connect when component mounts or reconnect parameters change
-  useEffect(() => {
-    connect();
     return () => {
       if (socketRef.current) {
         socketRef.current.close();
       }
     };
+  }, [reconnectInterval, reconnectAttempts, onOpen, onClose, onError, onMessage]);
+
+  // Connect when component mounts or reconnect parameters change
+  useEffect(() => {
+    const cleanup = connect();
+    return cleanup;
   }, [connect]);
 
   // Manual send function

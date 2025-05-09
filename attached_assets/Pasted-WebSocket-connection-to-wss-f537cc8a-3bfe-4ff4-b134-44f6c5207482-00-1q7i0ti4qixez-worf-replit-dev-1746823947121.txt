@@ -1,0 +1,29 @@
+WebSocket connection to 'wss://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/?token=icj41bSRBTx3' failed: 
+setupWebSocket @ client:536Understand this error
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=icj41bSRBTx3' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)Understand this error
+chunk-RPCDYKBN.js?v=77f17044:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-RPCDYKBN.js?v=77f17044:521 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=77f17044:337:18
+    at div
+    at div
+    at aside
+    at Sidebar (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/src/components/layout/Sidebar.tsx:33:35)
+    at div
+    at Layout (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/src/components/layout/Layout.tsx:21:34)
+    at Provider (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5AJU3CG7.js?v=77f17044:38:15)
+    at TooltipProvider (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=77f17044:61:5)
+    at QueryClientProvider (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=77f17044:2805:3)
+    at ThemeProvider (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/src/components/ui/theme-provider.tsx:25:3)
+    at App
+    at ThemeProvider (https://f537cc8a-3bfe-4ff4-b134-44f6c5207482-00-1q7i0ti4qixez.worf.replit.dev/src/components/ui/theme-provider.tsx?v=wE9WNvADAY7CmRZPJvISL:25:3)
+printWarning @ chunk-RPCDYKBN.js?v=77f17044:521Understand this error
+chunk-RPCDYKBN.js?v=77f17044:521 Warning: Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+
+* Move code with side effects to componentDidMount, and set initial state in the constructor.
+
+Please update the following components: SideEffect(NullComponent2)

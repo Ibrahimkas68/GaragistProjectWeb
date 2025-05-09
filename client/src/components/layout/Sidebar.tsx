@@ -90,23 +90,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               const Icon = link.icon;
               
               return (
-                <Link 
-                  key={link.href} 
-                  href={link.href}
-                  onClick={isMobile ? onClose : undefined}
-                >
-                  <a
-                    className={cn(
-                      "flex items-center px-3 py-2 text-sm font-medium rounded-md",
-                      isActive
-                        ? "bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-100"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    )}
+                <div key={link.href}>
+                  <Link 
+                    href={link.href}
+                    onClick={isMobile ? onClose : undefined}
                   >
-                    <Icon className="w-5 h-5 mr-3" />
-                    {link.name}
-                  </a>
-                </Link>
+                    <div
+                      className={cn(
+                        "flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer",
+                        isActive
+                          ? "bg-primary-50 dark:bg-primary-900 text-primary-700 dark:text-primary-100"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      )}
+                    >
+                      <Icon className="w-5 h-5 mr-3" />
+                      {link.name}
+                    </div>
+                  </Link>
+                </div>
               );
             })}
           </div>
@@ -115,7 +116,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="absolute bottom-0 w-full border-t border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center">
             <Avatar>
-              <AvatarImage src={garage?.avatar} alt="Garage avatar" />
+              <AvatarImage src={garage?.avatar || undefined} alt="Garage avatar" />
               <AvatarFallback>JG</AvatarFallback>
             </Avatar>
             <div className="ml-3">
