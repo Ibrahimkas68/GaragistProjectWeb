@@ -47,17 +47,56 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
         </div>
         
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            aria-label="View notifications"
-          >
-            <Bell className="h-5 w-5" />
-            {notifications > 0 && (
-              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-primary"></span>
-            )}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                aria-label="View notifications"
+              >
+                <Bell className="h-5 w-5" />
+                {notifications > 0 && (
+                  <span className="absolute top-0 right-0 h-4 w-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                    {notifications}
+                  </span>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <div className="px-4 py-3 font-medium border-b">
+                Notifications ({notifications})
+              </div>
+              <div className="max-h-80 overflow-y-auto">
+                <div className="p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                  <div className="flex justify-between mb-1">
+                    <h5 className="font-medium text-sm">New Booking</h5>
+                    <span className="text-xs text-gray-500">10 min ago</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Michael Brown has booked a service appointment</p>
+                </div>
+                <div className="p-4 border-b hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                  <div className="flex justify-between mb-1">
+                    <h5 className="font-medium text-sm">Low Inventory</h5>
+                    <span className="text-xs text-gray-500">2 hours ago</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Engine Oil (5W-30) inventory is running low</p>
+                </div>
+                <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                  <div className="flex justify-between mb-1">
+                    <h5 className="font-medium text-sm">Service Completed</h5>
+                    <span className="text-xs text-gray-500">Yesterday</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Brake repair for Honda Civic has been completed</p>
+                </div>
+              </div>
+              <div className="p-2 border-t text-center">
+                <Button variant="ghost" className="text-sm text-primary w-full">
+                  View all notifications
+                </Button>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <Button
             variant="ghost"

@@ -405,22 +405,51 @@ export default function BookingKanban({ garageId }: BookingKanbanProps) {
             </div>
           )}
           
-          <DialogFooter className="flex justify-between gap-3 sm:justify-between">
-            <Button variant="outline" onClick={() => setSelectedBooking(null)}>
-              Cancel
-            </Button>
-            
-            {selectedBooking && selectedBooking.status !== "Completed" && (
-              <Button 
-                onClick={() => moveToNextStatus(selectedBooking)}
-                disabled={updateStatusMutation.isPending}
-              >
-                {updateStatusMutation.isPending ? "Updating..." : 
-                 selectedBooking.status === "New" ? "Assign Job" :
-                 selectedBooking.status === "Confirmed" ? "Begin Service" :
-                 selectedBooking.status === "InProgress" ? "Mark Complete" : "Move Next"}
+          <DialogFooter className="flex flex-col sm:flex-row justify-between gap-3 sm:justify-between">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setSelectedBooking(null)} className="w-full sm:w-auto">
+                Cancel
               </Button>
-            )}
+            </div>
+            
+            <div className="flex gap-2 w-full sm:w-auto">
+              {selectedBooking && selectedBooking.status !== "Completed" && (
+                <>
+                  {selectedBooking.status === "New" && (
+                    <Button 
+                      variant="default"
+                      onClick={() => moveToNextStatus(selectedBooking)}
+                      disabled={updateStatusMutation.isPending}
+                      className="w-full sm:w-auto"
+                    >
+                      {updateStatusMutation.isPending ? "Confirming..." : "Confirm Booking"}
+                    </Button>
+                  )}
+                  
+                  {selectedBooking.status === "Confirmed" && (
+                    <Button 
+                      variant="default"
+                      onClick={() => moveToNextStatus(selectedBooking)}
+                      disabled={updateStatusMutation.isPending}
+                      className="w-full sm:w-auto"
+                    >
+                      {updateStatusMutation.isPending ? "Starting..." : "Begin Service"}
+                    </Button>
+                  )}
+                  
+                  {selectedBooking.status === "InProgress" && (
+                    <Button 
+                      variant="default"
+                      onClick={() => moveToNextStatus(selectedBooking)}
+                      disabled={updateStatusMutation.isPending}
+                      className="w-full sm:w-auto"
+                    >
+                      {updateStatusMutation.isPending ? "Completing..." : "Mark as Complete"}
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
