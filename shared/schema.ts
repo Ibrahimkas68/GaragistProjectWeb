@@ -45,8 +45,9 @@ export const products = pgTable("products", {
 export const drivers = pgTable("drivers", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  email: text("email").notNull(),
+  email: text("email").notNull().unique(),
   phone: text("phone").notNull(),
+  password: text("password").notNull(),
   address: text("address"),
   zip: text("zip"),
   vehicleMake: text("vehicle_make").notNull(),

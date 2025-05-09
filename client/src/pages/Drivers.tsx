@@ -71,6 +71,11 @@ export default function Drivers() {
   // Form validation schema (extended from insertDriverSchema)
   const formSchema = insertDriverSchema.extend({
     avatar: z.string().optional(),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
   });
 
   type FormValues = z.infer<typeof formSchema>;
@@ -86,6 +91,8 @@ export default function Drivers() {
       vehicleModel: "",
       vehicleYear: "",
       avatar: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
@@ -204,6 +211,8 @@ export default function Drivers() {
       vehicleModel: "",
       vehicleYear: "",
       avatar: "",
+      password: "",
+      confirmPassword: "",
     });
     setEditingDriver(null);
     setDialogOpen(true);
@@ -219,6 +228,8 @@ export default function Drivers() {
       vehicleModel: driver.vehicleModel,
       vehicleYear: driver.vehicleYear,
       avatar: driver.avatar || "",
+      password: "", // Leave blank when editing
+      confirmPassword: "",
     });
     setEditingDriver(driver);
     setDialogOpen(true);
@@ -484,6 +495,39 @@ export default function Drivers() {
                     <p className="text-red-500 text-sm">{form.formState.errors.avatar.message}</p>
                   )}
                 </div>
+                
+                {/* Password fields - shown only for new drivers, or when explicitly editing password */}
+                {!editingDriver && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="password">Password</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          placeholder="••••••"
+                          {...form.register("password")}
+                        />
+                        {form.formState.errors.password && (
+                          <p className="text-red-500 text-sm">{form.formState.errors.password.message}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <Input
+                          id="confirmPassword"
+                          type="password"
+                          placeholder="••••••"
+                          {...form.register("confirmPassword")}
+                        />
+                        {form.formState.errors.confirmPassword && (
+                          <p className="text-red-500 text-sm">{form.formState.errors.confirmPassword.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               
               <DialogFooter>
