@@ -6,6 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { CalendarPlus, Filter, Download, Table, Columns, Plus } from "lucide-react";
 import BookingsTable from "@/components/bookings/BookingsTable";
 import BookingKanban from "@/components/bookings/BookingKanban";
+import CreateBookingForm from "@/components/bookings/CreateBookingForm";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { 
   DropdownMenu,
   DropdownMenuTrigger,
@@ -22,6 +30,7 @@ export default function Bookings() {
   // State for status filter
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   
   // Get current date for display
   const currentDate = new Date();
@@ -54,7 +63,7 @@ export default function Bookings() {
             <h1 className="text-2xl font-semibold">{formattedDate}</h1>
           </div>
           <div className="flex space-x-2">
-            <Button>
+            <Button onClick={() => setCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               New Job
             </Button>
@@ -153,6 +162,28 @@ export default function Bookings() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Create Booking Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Create New Job</DialogTitle>
+            <DialogDescription>
+              Create a new service job by selecting a driver and services.
+            </DialogDescription>
+          </DialogHeader>
+          <CreateBookingForm 
+            garageId={garageId} 
+            onSuccess={() => {
+              setCreateDialogOpen(false);
+              // Force refresh data
+              setTimeout(() => {
+                window.location.reload();
+              }, 500);
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
