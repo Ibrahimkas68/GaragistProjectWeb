@@ -470,9 +470,9 @@ export default function CreateBookingForm({ garageId, onSuccess }: CreateBooking
           </Select>
         </div>
         
-        {form.getValues("productsSelected")?.length > 0 ? (
+        {(form.getValues("productsSelected") || []).length > 0 ? (
           <div className="space-y-2">
-            {form.getValues("productsSelected").map((product) => {
+            {(form.getValues("productsSelected") || []).map((product) => {
               const productDetails = products?.find(p => p.id === product.id);
               const productName = productDetails?.name || "Product";
               const productPrice = productDetails?.price || 0;

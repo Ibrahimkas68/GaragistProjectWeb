@@ -192,11 +192,15 @@ export default function Drivers() {
           `${driver.vehicleMake} ${driver.vehicleModel}`.toLowerCase().includes(searchQuery.toLowerCase())
         )
         .sort((a, b) => {
-          const fieldA = a[sortBy.field];
-          const fieldB = b[sortBy.field];
+          // Use type assertion to treat values as string for comparison
+          const fieldA = a[sortBy.field] as string;
+          const fieldB = b[sortBy.field] as string;
           
-          if (fieldA < fieldB) return sortBy.direction === "asc" ? -1 : 1;
-          if (fieldA > fieldB) return sortBy.direction === "asc" ? 1 : -1;
+          const valueA = fieldA || "";
+          const valueB = fieldB || "";
+          
+          if (valueA < valueB) return sortBy.direction === "asc" ? -1 : 1;
+          if (valueA > valueB) return sortBy.direction === "asc" ? 1 : -1;
           return 0;
         })
     : [];
